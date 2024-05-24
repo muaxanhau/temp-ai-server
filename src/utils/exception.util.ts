@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 const unauthorized = () => {
@@ -19,10 +20,14 @@ const server = () => {
 const notFound = () => {
   throw new NotFoundException('Not found.');
 };
+const badRequest = () => {
+  throw new BadRequestException('Bad request.');
+};
 
-export const exceptionUtils = {
+export const exceptionUtil = {
   unauthorized,
   role,
   server,
   notFound,
+  badRequest,
 };

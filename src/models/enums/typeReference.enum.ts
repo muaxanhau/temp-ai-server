@@ -1,5 +1,5 @@
 export enum TypeReferenceEnum {
-  TRAVEL_TYPES = 'travelTypes',
-  QUANTITY = 'quantity',
+  STYLES = 'styles',
+  MEMBER = 'member',
   ACTIVITIES = 'activities',
 }

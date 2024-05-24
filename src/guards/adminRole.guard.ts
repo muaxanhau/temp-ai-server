@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { NO_ADMIN_ROLE, NO_AUTH } from 'src/decorators';
 import { RoleEnum } from 'src/models';
 import { UsersService } from 'src/services';
-import { exceptionUtils } from 'src/utils';
+import { exceptionUtil } from 'src/utils';
 
 @Injectable()
 export class AdminRoleGuard implements CanActivate {
@@ -27,7 +27,7 @@ export class AdminRoleGuard implements CanActivate {
 
     const user = (await this.userService.getUserBy(request.headers))!;
     const isUser = user.role === RoleEnum.USER;
-    if (isUser) return exceptionUtils.role();
+    if (isUser) return exceptionUtil.role();
 
     return true;
   }

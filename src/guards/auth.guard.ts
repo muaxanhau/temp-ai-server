@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { config } from 'src/config';
 import { NO_AUTH } from 'src/decorators';
 import { firebaseAuth } from 'src/services/firebase';
-import { exceptionUtils } from 'src/utils';
+import { exceptionUtil } from 'src/utils';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,13 +18,13 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const token = request.headers[config.tokenName];
-    if (!token) return exceptionUtils.unauthorized();
+    if (!token) return exceptionUtil.unauthorized();
 
     try {
       await firebaseAuth.verifyIdToken(token);
       return true;
     } catch (e) {
-      return exceptionUtils.unauthorized();
+      return exceptionUtil.unauthorized();
     }
   }
 }

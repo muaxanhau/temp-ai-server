@@ -6,11 +6,13 @@ import {
   Headers,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { HeadersBaseModel } from 'src/models';
 import { NoAuthGuard, NoRoleGuard } from 'src/decorators';
 import { ItineraryService, UsersService } from 'src/services';
-import { GetItineraryBodyModel } from './model';
+import { GetItineraryFromReferenceBodyModel } from './model';
+import { exceptionUtil } from 'src/utils';
 
 @Controller('/itinerary')
 export class ItineraryController {
@@ -19,18 +21,20 @@ export class ItineraryController {
     private readonly itineraryService: ItineraryService,
   ) {}
 
-  @Post()
+  @Post('/from-chats')
   @NoRoleGuard()
-  async getItinerary(
-    @Headers() headers: HeadersBaseModel,
-    @Body() body: GetItineraryBodyModel,
-  ) {
+  async getItineraryFromChat(@Headers() headers: HeadersBaseModel) {
     const userId = (await this.usersService.getUserIdBy(headers))!;
-    const {} = body;
+    const data = await this.itineraryService.generateBaseOnChat(userId);
+    return data;
+  }
 
-    console.log(body);
-
-    const data = await this.itineraryService.createBaseOnChat(userId);
+  @Post('/from-references')
+  @NoAuthGuard()
+  async getItineraryFromReference(
+    @Body() body: GetItineraryFromReferenceBodyModel,
+  ) {
+    const data = await this.itineraryService.generateBaseOnReference(body);
     return data;
   }
 }

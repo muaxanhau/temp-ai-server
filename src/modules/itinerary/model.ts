@@ -3,14 +3,14 @@ import {
   IsArray,
   IsDate,
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsString,
 } from 'class-validator';
-import { ChatIdModel } from 'src/models';
 
 //=====================================================================================================================
-// getItinerary
-export class GetItineraryBodyModel {
+// getItineraryFromReference
+export class GetItineraryFromReferenceBodyModel {
   @IsNotEmpty()
   @IsString()
   destination: string;
@@ -27,11 +27,11 @@ export class GetItineraryBodyModel {
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
-  travelTypes: string[];
+  styles: string[];
 
   @IsNotEmpty()
   @IsString()
-  quantity: string;
+  member: string;
 
   @IsNotEmpty()
   @IsArray()
@@ -39,4 +39,3 @@ export class GetItineraryBodyModel {
   @ArrayMinSize(1)
   activities: string[];
 }
-export type GetItineraryResponseModel = ChatIdModel;

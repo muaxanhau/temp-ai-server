@@ -41,7 +41,6 @@ export type PaginationResponseBaseModel<T> = {
 } & T;
 
 export class HeadersBaseModel {
-  @IsNotEmpty()
   @IsString()
   [tokenName]: string;
 }

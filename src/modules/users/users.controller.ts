@@ -19,7 +19,7 @@ import {
 } from './models';
 import { HeadersBaseModel } from 'src/models';
 import { NoAuthGuard, NoRoleGuard } from 'src/decorators';
-import { exceptionUtils } from 'src/utils';
+import { exceptionUtil } from 'src/utils';
 
 @Controller('/users')
 export class UsersController {
@@ -30,7 +30,7 @@ export class UsersController {
   async addUser(@Body() body: AddUserBodyModel): Promise<AddUserResponseModel> {
     const { id, role } = body;
     const user = await this.usersService.addBy(id, role);
-    if (!user) return exceptionUtils.notFound();
+    if (!user) return exceptionUtil.notFound();
 
     return user;
   }

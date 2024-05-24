@@ -12,7 +12,7 @@ import {
 @Injectable()
 export class ChatService {
   //#region private func
-  async countTokenByGemini(text: string) {
+  private async countTokenByGemini(text: string) {
     const { totalTokens } = await gemini.base.countTokens(text);
     return totalTokens;
   }
@@ -69,17 +69,6 @@ export class ChatService {
     ];
     const result = await gemini.base.startChat({ history }).sendMessage(prompt);
     const textGemini = result.response.text();
-
-    // const result = await gemini.base
-    //   .startChat({ history })
-    //   .sendMessageStream(prompt);
-    // for await (const chunk of result.stream) {
-    //   const chunkText = chunk.text();
-    //   console.log('____________');
-    //   console.log(chunkText);
-    // }
-    // const textGemini = (await result.response).text();
-
     return textGemini;
   }
   //#endregion

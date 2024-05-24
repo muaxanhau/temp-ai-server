@@ -7,7 +7,7 @@ import {
   PushNotificationResponse,
   UnauthorizeResponse,
 } from './models';
-import { exceptionUtils, utils } from 'src/utils';
+import { exceptionUtil, utils } from 'src/utils';
 
 @Controller('/tests')
 export class TestsController {
@@ -18,7 +18,7 @@ export class TestsController {
 
   @NoAuthGuard()
   @Get()
-  async test(): Promise<UnauthorizeResponse> {
+  async test() {
     console.log(gemini.base.safetySettings);
     return null;
   }
@@ -40,6 +40,6 @@ export class TestsController {
   @NoRoleGuard()
   @Get('/unauthorize')
   async unauthorize(): Promise<UnauthorizeResponse> {
-    return exceptionUtils.unauthorized();
+    return exceptionUtil.unauthorized();
   }
 }

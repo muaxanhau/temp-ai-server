@@ -6,7 +6,7 @@ import { config } from 'src/config';
 @Injectable()
 export class UsersService {
   async addBy(id: string, role: RoleEnum) {
-    const { displayName, email } = await firebaseAuth.getUser(id);
+    const { displayName = '', email = '' } = await firebaseAuth.getUser(id);
     const user = await usersCollection.addBy(id, {
       role,
       name: displayName,
