@@ -6,22 +6,22 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
-const unauthorized = () => {
-  throw new UnauthorizedException('Unauthorized. Please login!');
+const unauthorized = (msg?: string) => {
+  throw new UnauthorizedException(msg || 'Unauthorized. Please login!');
 };
-const role = () => {
-  throw new ForbiddenException('Access Denied');
+const role = (msg?: string) => {
+  throw new ForbiddenException(msg || 'Access Denied');
 };
-const server = () => {
+const server = (msg?: string) => {
   throw new InternalServerErrorException(
-    'Something went wrong. Please get back later.',
+    msg || 'Something went wrong. Please get back later.',
   );
 };
-const notFound = () => {
-  throw new NotFoundException('Not found.');
+const notFound = (msg?: string) => {
+  throw new NotFoundException(msg || 'Not found.');
 };
-const badRequest = () => {
-  throw new BadRequestException('Bad request.');
+const badRequest = (msg?: string) => {
+  throw new BadRequestException(msg || 'Bad request.');
 };
 
 export const exceptionUtil = {

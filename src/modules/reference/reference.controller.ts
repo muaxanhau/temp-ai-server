@@ -69,7 +69,7 @@ export class ReferenceController {
   @Get()
   @NoAuthGuard()
   async getDefaultReferences() {
-    const references = await this.referencesService.getAllDefault();
+    const references = await this.referencesService.getDefaultReferences();
     return references;
   }
 

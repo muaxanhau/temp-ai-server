@@ -11,9 +11,25 @@ import { exceptionUtil } from 'src/utils';
 export class ReferencesService {
   private async getIdReference(type: TypeReferenceEnum) {
     const ref = await referencesCollection.getBy({ type });
-    const { id } = !ref.length
-      ? await referencesCollection.add({ type, question: '' })
-      : ref[0];
+    if (ref.length) {
+      return ref[0].id;
+    }
+
+    const allRefs = await referencesCollection.getAll();
+    if (!allRefs.length) {
+      const { id } = await referencesCollection.add({
+        type,
+        question: '',
+        sortIndex: 0,
+      });
+      return id;
+    }
+    const sortIndex = Math.max(...allRefs.map((ref) => ref.sortIndex)) + 1;
+    const { id } = await referencesCollection.add({
+      type,
+      question: '',
+      sortIndex,
+    });
     return id;
   }
 
@@ -24,9 +40,15 @@ export class ReferencesService {
   ) {
     const ref = await referencesCollection.getBy({ type });
     const isExisted = !!ref.length;
-    if (isExisted) return;
+    if (isExisted) {
+      return exceptionUtil.badRequest('Existed');
+    }
 
-    await referencesCollection.add({ type, question });
+    const allRefs = await referencesCollection.getAll();
+    const sortIndex = allRefs.length
+      ? Math.max(...allRefs.map((ref) => ref.sortIndex)) + 1
+      : 0;
+    await referencesCollection.add({ type, question, sortIndex });
     const hasSuggestions = !!suggestions.length;
     hasSuggestions && (await this.addSuggestions(type, suggestions));
   }
@@ -78,11 +100,11 @@ export class ReferencesService {
     await referencesSuggestionsCollection.delete(id);
   }
 
-  async getAllDefault() {
+  async getDefaultReferences() {
     const references = await referencesCollection.getAll();
     const suggestions = await referencesSuggestionsCollection.getAll();
 
-    const objReferences = {};
+    const objReferences: ReferenceModel[] = [];
     for (const key in TypeReferenceEnum) {
       if (!TypeReferenceEnum.hasOwnProperty(key)) continue;
 
@@ -90,28 +112,24 @@ export class ReferencesService {
         (ref) => ref.type === TypeReferenceEnum[key],
       );
       const isEmpty = !filteredReferences.length;
-      if (isEmpty) {
-        objReferences[TypeReferenceEnum[key]] = {
-          id: '',
-          question: '',
-          suggestions: [],
-        };
-        continue;
-      }
-      const { id: referenceId, question } = filteredReferences[0];
+      if (isEmpty) continue;
+
+      const { id: referenceId, question, sortIndex } = filteredReferences[0];
       const filteredSuggestions = suggestions.filter(
         (suggestion) =>
           suggestion.referenceId === referenceId && !suggestion.isCustom,
       );
 
-      objReferences[TypeReferenceEnum[key]] = {
+      objReferences.push({
         id: referenceId,
+        type: TypeReferenceEnum[key],
+        sortIndex,
         question,
         suggestions: filteredSuggestions.map(({ id, value }) => ({
           id,
           value,
         })),
-      };
+      });
     }
     return objReferences;
   }
@@ -121,11 +139,12 @@ export class ReferencesService {
     const suggestions = await referencesSuggestionsCollection.getAll();
     const userSuggestions = await usersSuggestionsCollection.getBy({ userId });
 
-    if (!userSuggestions.length) return exceptionUtil.badRequest();
+    if (!userSuggestions.length) {
+      return exceptionUtil.badRequest();
+    }
 
     const userSuggestionIds = userSuggestions[0].suggestionIds;
-
-    const objReferences = {};
+    const objReferences: ReferenceModel[] = [];
     for (const key in TypeReferenceEnum) {
       if (!TypeReferenceEnum.hasOwnProperty(key)) continue;
 
@@ -133,29 +152,25 @@ export class ReferencesService {
         (ref) => ref.type === TypeReferenceEnum[key],
       );
       const isEmpty = !filteredReferences.length;
-      if (isEmpty) {
-        objReferences[TypeReferenceEnum[key]] = {
-          id: '',
-          question: '',
-          suggestions: [],
-        };
-        continue;
-      }
-      const { id: referenceId, question } = filteredReferences[0];
+      if (isEmpty) continue;
+
+      const { id: referenceId, question, sortIndex } = filteredReferences[0];
       const filteredSuggestions = suggestions.filter(
         (suggestion) =>
           suggestion.referenceId === referenceId &&
           userSuggestionIds.includes(suggestion.id),
       );
 
-      objReferences[TypeReferenceEnum[key]] = {
+      objReferences.push({
         id: referenceId,
+        type: TypeReferenceEnum[key],
+        sortIndex,
         question,
         suggestions: filteredSuggestions.map(({ id, value }) => ({
           id,
           value,
         })),
-      };
+      });
     }
     return objReferences;
   }
@@ -173,3 +188,14 @@ export class ReferencesService {
     await usersSuggestionsCollection.edit(id, { suggestionIds });
   }
 }
+
+type ReferenceModel = {
+  id: string;
+  type: TypeReferenceEnum;
+  sortIndex: number;
+  question: string;
+  suggestions: {
+    id: string;
+    value: string;
+  }[];
+};
