@@ -104,7 +104,7 @@ export class ReferencesService {
     const references = await referencesCollection.getAll();
     const suggestions = await referencesSuggestionsCollection.getAll();
 
-    const objReferences: ReferenceModel[] = [];
+    const arrReferences: ReferenceModel[] = [];
     for (const key in TypeReferenceEnum) {
       if (!TypeReferenceEnum.hasOwnProperty(key)) continue;
 
@@ -120,7 +120,7 @@ export class ReferencesService {
           suggestion.referenceId === referenceId && !suggestion.isCustom,
       );
 
-      objReferences.push({
+      arrReferences.push({
         id: referenceId,
         type: TypeReferenceEnum[key],
         sortIndex,
@@ -131,7 +131,7 @@ export class ReferencesService {
         })),
       });
     }
-    return objReferences;
+    return arrReferences;
   }
 
   async getUserReferences(userId: string) {
@@ -144,7 +144,7 @@ export class ReferencesService {
     }
 
     const userSuggestionIds = userSuggestions[0].suggestionIds;
-    const objReferences: ReferenceModel[] = [];
+    const arrReferences: ReferenceModel[] = [];
     for (const key in TypeReferenceEnum) {
       if (!TypeReferenceEnum.hasOwnProperty(key)) continue;
 
@@ -161,7 +161,7 @@ export class ReferencesService {
           userSuggestionIds.includes(suggestion.id),
       );
 
-      objReferences.push({
+      arrReferences.push({
         id: referenceId,
         type: TypeReferenceEnum[key],
         sortIndex,
@@ -172,7 +172,7 @@ export class ReferencesService {
         })),
       });
     }
-    return objReferences;
+    return arrReferences;
   }
 
   async addUserReferences(userId: string, suggestionIds: string[]) {

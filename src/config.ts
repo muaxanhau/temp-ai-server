@@ -85,4 +85,4 @@ const environments: EnvironmentsConfigModel = {
  * *** change environment here ***
  * *******************************
  */
-export const config = environments.PRE_DEVELOPMENT;
+export const config = environments.DEVELOPMENT;

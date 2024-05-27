@@ -84,6 +84,8 @@ export class ItineraryService {
      * 
      * please create a suitable and convenient itinerary for each day of the trip.
      * 
+     * 'time' is the time point when visiting that tourist location, specify the exact hour and.
+     * 
      */
     const duration = dateUtil.calculateDaysDifference(startDate, endDate) + 1;
     const prompt = `Please help me create a travel plan based on the following criteria:
@@ -106,7 +108,7 @@ export class ItineraryService {
     'locationName' represents the name of the place to visit;
     'coords' represents the specific coordinates of the place to visit;
     'note' is a suggestion, advice on what to do, what to see at that location, please provide as detailed and specific advice as possible;
-    'time' is the time point when visiting that tourist location, specify the exact hour.
+    'time' is the time point when visiting that tourist location (dawn, morning, afternoon,...).
     Only output the data in JSON format, do not add any other content.`;
     const response = await this.withBare(prompt, []);
     return response;
@@ -169,8 +171,22 @@ export class ItineraryService {
       [],
     );
 
+    const groupedByDay = scheduleObjectWithLink.reduce((acc, current) => {
+      if (!acc[current.day]) {
+        acc[current.day] = [];
+      }
+      acc[current.day].push(current);
+      return acc;
+    }, {});
+    const resultArray = Object.entries(groupedByDay).map(
+      ([day, locations]) => ({
+        day: Number(day),
+        locations: locations,
+      }),
+    );
+
     return {
-      schedule: scheduleObjectWithLink,
+      schedule: resultArray,
       accommodations: accommodationObject,
     };
   }
@@ -262,6 +278,7 @@ type Schedule = {
   note: string;
   link: string;
 };
+
 type Accommodation = {
   accommodationName: string;
   coords: [number, number];
