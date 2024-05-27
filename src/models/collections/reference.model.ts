@@ -3,6 +3,6 @@ import { TypeReferenceEnum } from '../enums';
 
 export type ReferencesModel = {
   type: TypeReferenceEnum;
-  values: string[];
+  question: string;
 };
 export type ReferencesIdModel = FirestoreBaseModel<ReferencesModel>;

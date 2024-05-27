@@ -9,15 +9,46 @@ import {
 } from 'class-validator';
 import { ChatIdModel, TypeReferenceEnum } from 'src/models';
 
-//=====================================================================================================================
-// addReference
-export class AddReferenceQueryModel {
+class TypeReference {
   @IsNotEmpty()
   @IsEnum(TypeReferenceEnum)
   type: TypeReferenceEnum;
 }
+
+//=====================================================================================================================
+// addReference
+export class AddReferenceQueryModel extends TypeReference {}
 export class AddReferenceBodyModel {
   @IsNotEmpty()
   @IsString()
+  question: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  suggestions: string[];
+}
+
+//=====================================================================================================================
+// addSuggestion
+export class AddSuggestionQueryModel extends TypeReference {}
+export class AddSuggestionBodyModel {
+  @IsNotEmpty()
+  @IsString()
   value: string;
+}
+
+//=====================================================================================================================
+// addUserReferences
+export class AddUserReferencesBodyModel {
+  @IsArray()
+  @IsString({ each: true })
+  stylesSuggestionIds: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  memberSuggestionIds: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  activitiesSuggestionIds: string[];
 }

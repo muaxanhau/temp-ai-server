@@ -4,7 +4,9 @@ import {
   FirestoreDeletedBaseModel,
   FirestoreFullBaseModel,
   ReferencesModel,
+  ReferenceSuggestionModel,
   UserModel,
+  UserSuggestionModel,
 } from 'src/models';
 import { AddPrefixToKeys, Timestamp } from 'firebase-admin/firestore';
 import { FirestoreBaseModel } from 'src/models';
@@ -239,4 +241,9 @@ export const usersCollection = new Collection<UserModel>('users');
 export const chatsCollection = new Collection<ChatModel>('chats');
 export const referencesCollection = new Collection<ReferencesModel>(
   'references',
+);
+export const referencesSuggestionsCollection =
+  new Collection<ReferenceSuggestionModel>('references_suggestions');
+export const usersSuggestionsCollection = new Collection<UserSuggestionModel>(
+  'users_suggestions',
 );

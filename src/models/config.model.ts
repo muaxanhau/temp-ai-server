@@ -1,5 +1,9 @@
 // add new environment here
-type EnvironmentList = 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION';
+type EnvironmentList =
+  | 'PRE_DEVELOPMENT'
+  | 'DEVELOPMENT'
+  | 'STAGING'
+  | 'PRODUCTION';
 export type EnvironmentsConfigModel = Readonly<
   Record<
     EnvironmentList,

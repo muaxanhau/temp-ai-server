@@ -6,16 +6,26 @@ import {
   Headers,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { HeadersBaseModel, TypeReferenceEnum } from 'src/models';
 import { NoAuthGuard, NoRoleGuard } from 'src/decorators';
-import { ReferencesService } from 'src/services';
-import { AddReferenceBodyModel, AddReferenceQueryModel } from './model';
+import { ReferencesService, UsersService } from 'src/services';
+import {
+  AddReferenceBodyModel,
+  AddReferenceQueryModel,
+  AddSuggestionBodyModel,
+  AddSuggestionQueryModel,
+  AddUserReferencesBodyModel,
+} from './model';
 
 @Controller('/references')
 export class ReferenceController {
-  constructor(private readonly referencesService: ReferencesService) {}
+  constructor(
+    private readonly referencesService: ReferencesService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post()
   @NoAuthGuard()
@@ -24,27 +34,94 @@ export class ReferenceController {
     @Body() body: AddReferenceBodyModel,
   ) {
     const { type } = query;
-    const { value } = body;
-    this.referencesService.add(type, value);
-
+    const { question, suggestions } = body;
+    await this.referencesService.addReference(type, question, suggestions);
     return null;
+  }
+
+  @Post('/suggestions')
+  @NoAuthGuard()
+  async addSuggestion(
+    @Query() query: AddSuggestionQueryModel,
+    @Body() body: AddSuggestionBodyModel,
+  ) {
+    const { type } = query;
+    const { value } = body;
+    await this.referencesService.addSuggestions(type, [value]);
+    return null;
+  }
+
+  @Post('/custom-suggestions')
+  @NoAuthGuard()
+  async addCustomSuggestion(
+    @Query() query: AddSuggestionQueryModel,
+    @Body() body: AddSuggestionBodyModel,
+  ) {
+    const { type } = query;
+    const { value } = body;
+    const response = await this.referencesService.addCustomSuggestion(
+      type,
+      value,
+    );
+    return response;
   }
 
   @Get()
   @NoAuthGuard()
-  async getReferences() {
-    const references = await this.referencesService.getAll();
+  async getDefaultReferences() {
+    const references = await this.referencesService.getAllDefault();
+    return references;
+  }
 
-    const objReferences = {};
-    for (const key in TypeReferenceEnum) {
-      if (TypeReferenceEnum.hasOwnProperty(key)) {
-        objReferences[TypeReferenceEnum[key]] = [];
-      }
-    }
-    references.forEach((ref) => {
-      objReferences[ref.type] = ref.values;
-    });
+  @Get('/users')
+  @NoAuthGuard()
+  async getUserReferences(@Headers() headers: HeadersBaseModel) {
+    const userId = (await this.usersService.getUserIdBy(headers))!;
+    const references = await this.referencesService.getUserReferences(userId);
+    return references;
+  }
 
-    return objReferences;
+  @Post('/users')
+  @NoRoleGuard()
+  async addUserReferences(
+    @Headers() headers: HeadersBaseModel,
+    @Body() body: AddUserReferencesBodyModel,
+  ) {
+    const userId = (await this.usersService.getUserIdBy(headers))!;
+    const {
+      stylesSuggestionIds,
+      memberSuggestionIds,
+      activitiesSuggestionIds,
+    } = body;
+
+    const suggestionIds = [
+      ...stylesSuggestionIds,
+      ...memberSuggestionIds,
+      ...activitiesSuggestionIds,
+    ];
+    await this.referencesService.addUserReferences(userId, suggestionIds);
+    return null;
+  }
+
+  @Put('/users')
+  @NoRoleGuard()
+  async updateUserReferences(
+    @Headers() headers: HeadersBaseModel,
+    @Body() body: AddUserReferencesBodyModel,
+  ) {
+    const userId = (await this.usersService.getUserIdBy(headers))!;
+    const {
+      stylesSuggestionIds,
+      memberSuggestionIds,
+      activitiesSuggestionIds,
+    } = body;
+
+    const suggestionIds = [
+      ...stylesSuggestionIds,
+      ...memberSuggestionIds,
+      ...activitiesSuggestionIds,
+    ];
+    await this.referencesService.updateUserReferences(userId, suggestionIds);
+    return null;
   }
 }
