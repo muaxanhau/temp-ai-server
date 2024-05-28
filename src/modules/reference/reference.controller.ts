@@ -18,6 +18,7 @@ import {
   AddSuggestionBodyModel,
   AddSuggestionQueryModel,
   AddUserReferencesBodyModel,
+  UpdateUserReferencesBodyModel,
 } from './model';
 
 @Controller('/references')
@@ -78,7 +79,7 @@ export class ReferenceController {
   }
 
   @Get('/users')
-  @NoAuthGuard()
+  @NoRoleGuard()
   async getUserReferences(@Headers() headers: HeadersBaseModel) {
     const userId = (await this.usersService.getUserIdBy(headers))!;
     const references = await this.referencesService.getUserReferences(userId);
@@ -92,17 +93,8 @@ export class ReferenceController {
     @Body() body: AddUserReferencesBodyModel,
   ) {
     const userId = (await this.usersService.getUserIdBy(headers))!;
-    const {
-      stylesSuggestionIds,
-      memberSuggestionIds,
-      activitiesSuggestionIds,
-    } = body;
+    const { suggestionIds } = body;
 
-    const suggestionIds = [
-      ...stylesSuggestionIds,
-      ...memberSuggestionIds,
-      ...activitiesSuggestionIds,
-    ];
     await this.referencesService.addUserReferences(userId, suggestionIds);
     return null;
   }
@@ -111,20 +103,11 @@ export class ReferenceController {
   @NoRoleGuard()
   async updateUserReferences(
     @Headers() headers: HeadersBaseModel,
-    @Body() body: AddUserReferencesBodyModel,
+    @Body() body: UpdateUserReferencesBodyModel,
   ) {
     const userId = (await this.usersService.getUserIdBy(headers))!;
-    const {
-      stylesSuggestionIds,
-      memberSuggestionIds,
-      activitiesSuggestionIds,
-    } = body;
+    const { suggestionIds } = body;
 
-    const suggestionIds = [
-      ...stylesSuggestionIds,
-      ...memberSuggestionIds,
-      ...activitiesSuggestionIds,
-    ];
     await this.referencesService.updateUserReferences(userId, suggestionIds);
     return null;
   }

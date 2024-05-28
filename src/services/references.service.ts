@@ -5,7 +5,7 @@ import {
   referencesSuggestionsCollection,
   usersSuggestionsCollection,
 } from 'src/services/firebase';
-import { exceptionUtil } from 'src/utils';
+import { exceptionUtil, utils } from 'src/utils';
 
 @Injectable()
 export class ReferencesService {
@@ -172,15 +172,29 @@ export class ReferencesService {
   }
 
   async addUserReferences(userId: string, suggestionIds: string[]) {
-    await usersSuggestionsCollection.add({ userId, suggestionIds });
+    const userSuggestions = await usersSuggestionsCollection.getBy({ userId });
+    const isEmpty = !userSuggestions.length;
+
+    if (isEmpty) {
+      await usersSuggestionsCollection.add({ userId, suggestionIds });
+      return;
+    }
+
+    const newSuggestionIds = utils.mergeUniqueArrays(
+      userSuggestions[0].suggestionIds,
+      suggestionIds,
+    );
+    await this.updateUserReferences(userId, newSuggestionIds);
   }
   async updateUserReferences(userId: string, suggestionIds: string[]) {
-    const usersSuggestionsList = await usersSuggestionsCollection.getBy({
+    const usersSuggestions = await usersSuggestionsCollection.getBy({
       userId,
     });
-    if (!usersSuggestionsList.length) return;
+    if (!usersSuggestions.length) {
+      return exceptionUtil.badRequest('Not existed');
+    }
 
-    const { id } = usersSuggestionsList[0];
+    const { id } = usersSuggestions[0];
     await usersSuggestionsCollection.edit(id, { suggestionIds });
   }
 }

@@ -19,9 +19,16 @@ const countChar = (str: string, char: string) => {
     .reduce((count, c) => (c === char ? count + 1 : count), 0);
 };
 
+const mergeUniqueArrays = <T>(...arrays: T[][]): T[] => {
+  const mergedArray = arrays.flat();
+  const mergedSet = new Set<T>(mergedArray);
+  return Array.from(mergedSet);
+};
+
 export const utils = {
   getBaseUrl,
   countChar,
+  mergeUniqueArrays,
 };
 
 export type { Prettify };

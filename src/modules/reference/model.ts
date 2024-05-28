@@ -42,13 +42,13 @@ export class AddSuggestionBodyModel {
 export class AddUserReferencesBodyModel {
   @IsArray()
   @IsString({ each: true })
-  stylesSuggestionIds: string[];
+  suggestionIds: string[];
+}
 
+//=====================================================================================================================
+// addUserReferences
+export class UpdateUserReferencesBodyModel {
   @IsArray()
   @IsString({ each: true })
-  memberSuggestionIds: string[];
-
-  @IsArray()
-  @IsString({ each: true })
-  activitiesSuggestionIds: string[];
+  suggestionIds: string[];
 }
