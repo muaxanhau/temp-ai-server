@@ -139,7 +139,7 @@ export class ReferencesService {
     const suggestions = await referencesSuggestionsCollection.getAll();
     const userSuggestions = await usersSuggestionsCollection.getBy({ userId });
 
-    const userSuggestionIds = userSuggestions?.[0].suggestionIds || [];
+    const userSuggestionIds = userSuggestions?.[0]?.suggestionIds || [];
     const arrReferences: ReferenceModel[] = [];
     for (const key in TypeReferenceEnum) {
       if (!TypeReferenceEnum.hasOwnProperty(key)) continue;
