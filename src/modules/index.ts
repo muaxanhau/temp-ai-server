@@ -6,6 +6,7 @@ import { TestsModule } from './tests/tests.module';
 import { ItineraryModule } from './itinerary/itinerary.module';
 import { ChatModule } from './chat/chat.module';
 import { ReferenceModule } from './reference/reference.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ReferenceModule } from './reference/reference.module';
     ChatModule,
     ItineraryModule,
     ReferenceModule,
+    SearchModule,
   ],
   providers: [UsersService, AdminRoleGuard],
 })

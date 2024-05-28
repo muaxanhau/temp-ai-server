@@ -70,7 +70,11 @@ export class ReferenceController {
   @NoAuthGuard()
   async getDefaultReferences() {
     const references = await this.referencesService.getDefaultReferences();
-    return references;
+    return {
+      greetings:
+        'Hi there, welcome to Travel Itinerary Planner, I will help you create your travel plan',
+      references,
+    };
   }
 
   @Get('/users')
