@@ -75,22 +75,7 @@ export class SearchController {
     const result = await gemini.base.generateContent(prompt);
     const text = result.response.text();
     const places = this.stringToObjectJson<string[]>(text, []);
-
-    /**
-     * $0.35 / 1 million tokens => 1 token = 0.00000035
-     * $1.05 / 1 million tokens => 1 token = 0.00000105
-     * 0.000115/request
-     * => 100000 = 11.5 USD
-     *
-     *
-     * autocomplete 100000 = 2.4 USD
-     * search 100000 = 14.5 USD
-     */
-    const token1 = await gemini.base.countTokens(prompt);
-    const token2 = await gemini.base.countTokens(text);
-    console.log(
-      `${token1.totalTokens} tokens + ${token2.totalTokens} tokens = ${token1.totalTokens * 0.00000035 + token2.totalTokens * 0.00000105} USD`,
-    );
-    return places;
+    const uniquePlaces = utils.mergeUniqueArrays(places);
+    return uniquePlaces;
   }
 }
