@@ -152,7 +152,7 @@ export class ItineraryService {
         ? this.promptScheduleBaseOnPreference(references)
         : '');
 
-    const scheduleObject = this.stringToObjectJson<Schedule[]>(
+    const scheduleObject = utils.stringToObjectJson<Schedule[]>(
       responseSchedule,
       [],
     );
@@ -166,7 +166,7 @@ export class ItineraryService {
     );
     const responseAccommodation =
       await this.promptAccommodation(listLocationsString);
-    const accommodationObject = this.stringToObjectJson<Accommodation[]>(
+    const accommodationObject = utils.stringToObjectJson<Accommodation[]>(
       responseAccommodation,
       [],
     );
@@ -189,59 +189,6 @@ export class ItineraryService {
       schedule: resultArray,
       accommodations: accommodationObject,
     };
-  }
-
-  private isCompletedJson(jsonString: string) {
-    const result =
-      utils.countChar(jsonString, '{') === utils.countChar(jsonString, '}') &&
-      utils.countChar(jsonString, '[') === utils.countChar(jsonString, ']');
-    return result;
-  }
-  private stringToObjectJson<T>(rawStr: string, defaultValue: T) {
-    const str = rawStr
-      .replaceAll(/json/gi, '')
-      .replaceAll('`', '')
-      .replaceAll('\n', '')
-      .replaceAll('\t', '')
-      .replace(/\s{2,}/g, '')
-      .trim();
-
-    const isCompletedJsonString = this.isCompletedJson(str);
-    const completedJsonString = isCompletedJsonString
-      ? str
-      : this.cutUncompletedJsonString(str);
-
-    let object: T = defaultValue;
-    try {
-      object = new Function('return ' + completedJsonString)() as T;
-    } catch (e) {
-      console.log(e);
-    }
-
-    return object;
-  }
-  private cutUncompletedJsonString(jsonString: string) {
-    if (!jsonString.length) return '';
-
-    const firstChar = jsonString[0];
-    const lastChar = firstChar === '{' ? '}' : ']';
-
-    let count = 0; // count for  both { } and [ ]
-    let currPosition = 0;
-    for (let i = 1; i < jsonString.length; i++) {
-      const char = jsonString.charAt(i);
-
-      if (!['{', '}', '[', ']'].includes(char)) continue;
-
-      ['{', '['].includes(char) ? count++ : count--;
-
-      if (count === 0) {
-        currPosition = i + 1;
-      }
-    }
-
-    const result = jsonString.substring(0, currPosition) + lastChar;
-    return result;
   }
 
   //#endregion
