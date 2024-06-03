@@ -1,6 +1,6 @@
 // add new environment here
 type EnvironmentList =
-  | 'PRE_DEVELOPMENT'
+  | 'LOCAL_DEVELOPMENT'
   | 'DEVELOPMENT'
   | 'STAGING'
   | 'PRODUCTION';

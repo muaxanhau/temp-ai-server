@@ -1,7 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { chatsCollection } from './firebase';
+import {
+  accommodationsCollection,
+  chatsCollection,
+  itinerariesCollection,
+  locationsCollection,
+} from './firebase';
 import { Timestamp } from 'firebase-admin/firestore';
-import { AITypeEnum, ChatIdModel, ChatModel, ChatRole } from 'src/models';
+import {
+  AccommodationModel,
+  AITypeEnum,
+  ChatIdModel,
+  ChatModel,
+  ChatRole,
+  FirestoreBaseModel,
+  LocationModel,
+} from 'src/models';
 import { gemini } from './ai';
 import { Content } from '@google/generative-ai';
 import { dateUtil, utils } from 'src/utils';
@@ -71,22 +84,6 @@ export class ItineraryService {
   private async promptScheduleBaseOnPreference(references: References) {
     const { destination, startDate, endDate, member, styles, activities } =
       references;
-    /**
-     * 
-     * Please help me create a travel plan based on the following criteria:
-
-      Destination: Japan
-      Style: Luxury, adventurous
-      Start date: May 20, 2025
-      End date: June 3, 2025
-      Number of members: solo
-      Activities aimed at: mountain climbing, exploration
-     * 
-     * please create a suitable and convenient itinerary for each day of the trip.
-     * 
-     * 'time' is the time point when visiting that tourist location, specify the exact hour and.
-     * 
-     */
     const duration = dateUtil.calculateDaysDifference(startDate, endDate) + 1;
     const prompt = `Please help me create a travel plan based on the following criteria:
     - Destination: ${destination}; 
@@ -98,17 +95,19 @@ export class ItineraryService {
     - Activities aimed at: ${activities.join(', ')};
     Create data based on the format below: 
     {
-      locationName: string
-      coords: [number, number]
-      day: number
-      time: string
-      note: string
-    }[] 
+      day: number;
+      locations: {
+        locationName: string;
+        coords: [number, number];
+        time: string;
+        note: string;
+      }[];
+    }[];
     With the 'day' field representing which day of the trip this is;
     'locationName' represents the name of the place to visit;
     'coords' represents the specific coordinates of the place to visit;
     'note' is a suggestion, advice on what to do, what to see at that location, please provide as detailed and specific advice as possible;
-    'time' is the time point when visiting that tourist location (dawn, morning, afternoon,...).
+    'time' is the time point when visiting that tourist location (dawn, morning, afternoon, evening, night...).
     Only output the data in JSON format, do not add any other content.`;
     const response = await this.withBare(prompt, []);
     return response;
@@ -125,70 +124,107 @@ export class ItineraryService {
       accommodationName: string;
       coords: [number, number];
       description: string;
-      link: string;
     }[] 
     With the 'accommodationName' field representing name of the accommodation;
     'coords' represents the specific coordinates;
-    'description' represents the detail;
-    'link' of accommodation is the URL leading to the link https://www.booking.com/.
+    'description' represents the detail.
     Only output the data in JSON format, do not add any other content.`;
     const response = await this.withBare(prompt, []);
 
     return response;
   }
-  private async generateFrom({
+  private async generateRawFrom({
     userId,
     references,
   }: {
     userId?: string;
     references?: References;
   }) {
-    console.log('=======================================================');
-    console.log('create a plan');
-
     const responseSchedule = await (userId
       ? this.promptScheduleBaseOnChat(userId)
       : references
         ? this.promptScheduleBaseOnPreference(references)
         : '');
 
-    const scheduleObject = utils.stringToObjectJson<Schedule[]>(
+    console.log(JSON.stringify(responseSchedule));
+
+    const scheduleArr = utils.stringToObjectJson<Schedule>(
       responseSchedule,
       [],
     );
-    const scheduleObjectWithLink = scheduleObject.map<Schedule>((j) => ({
-      ...j,
-      link: `https://www.viator.com/searchResults/all?text=${j.locationName.replaceAll(' ', '%20')}`,
-    }));
 
-    const listLocationsString = JSON.stringify(
-      scheduleObject.map((j) => j.locationName),
-    );
+    const locationNameArr = scheduleArr.reduce<string[]>((prev, curr) => {
+      const allLocationNameByDay = curr.locations.map(
+        (location) => location.locationName,
+      );
+      prev.push(...allLocationNameByDay);
+      return prev;
+    }, []);
+    const listLocationsString = JSON.stringify(locationNameArr);
     const responseAccommodation =
       await this.promptAccommodation(listLocationsString);
-    const accommodationObject = utils.stringToObjectJson<Accommodation[]>(
+    const accommodationArr = utils.stringToObjectJson<Accommodation[]>(
       responseAccommodation,
       [],
     );
 
-    const groupedByDay = scheduleObjectWithLink.reduce((acc, current) => {
+    return {
+      schedule: scheduleArr,
+      accommodations: accommodationArr,
+    };
+  }
+
+  private async storeItinerary(
+    schedule: Schedule,
+    accommodations: Accommodation[],
+  ) {
+    const { id: itineraryId } = await itinerariesCollection.add({
+      createdAt: Timestamp.fromDate(new Date()),
+      userId: '',
+    });
+    await Promise.all([
+      Promise.all(
+        schedule.map(({ day, locations }) =>
+          Promise.all(
+            locations.map((location) =>
+              locationsCollection.add({
+                itineraryId,
+                day,
+                ...location,
+              }),
+            ),
+          ),
+        ),
+      ),
+      Promise.all(
+        accommodations.map((accommodation) =>
+          accommodationsCollection.add({
+            itineraryId,
+            ...accommodation,
+          }),
+        ),
+      ),
+    ]);
+
+    return itineraryId;
+  }
+  private groupByDayItinerary(locations: FirestoreBaseModel<LocationModel>[]) {
+    const groupedByDay = locations.reduce<{
+      [day: number]: ({ id: string } & Location)[];
+    }>((acc, current) => {
       if (!acc[current.day]) {
         acc[current.day] = [];
       }
-      acc[current.day].push(current);
+      const { day, itineraryId, ...location } = current;
+      acc[current.day].push(location);
       return acc;
     }, {});
-    const resultArray = Object.entries(groupedByDay).map(
-      ([day, locations]) => ({
-        day: Number(day),
-        locations: locations,
-      }),
-    );
+    const result = Object.entries(groupedByDay).map(([day, locations]) => ({
+      day: Number(day),
+      locations: locations,
+    }));
 
-    return {
-      schedule: resultArray,
-      accommodations: accommodationObject,
-    };
+    return result;
   }
 
   //#endregion
@@ -198,13 +234,57 @@ export class ItineraryService {
   // =====================================================================================
 
   async generateBaseOnChat(userId: string) {
-    const result = await this.generateFrom({ userId });
-    return result;
+    const { schedule, accommodations } = await this.generateRawFrom({ userId });
+    const id = await this.storeItinerary(schedule, accommodations);
+    const itinerary = await this.getItinerary(id);
+
+    return itinerary;
   }
 
   async generateBaseOnReference(references: References) {
-    const result = await this.generateFrom({ references });
+    const { schedule, accommodations } = await this.generateRawFrom({
+      references,
+    });
+    const id = await this.storeItinerary(schedule, accommodations);
+    const itinerary = await this.getItinerary(id);
+
+    return itinerary;
+  }
+
+  async getItinerary(itineraryId: string) {
+    const itinerary = await itinerariesCollection.get(itineraryId);
+    const rawLocations = await locationsCollection.getBy({ itineraryId });
+    const schedule = this.groupByDayItinerary(rawLocations);
+
+    const rawAccommodations = await accommodationsCollection.getBy({
+      itineraryId,
+    });
+    const accommodations = rawAccommodations.map(
+      ({ itineraryId, ...accommodation }) => accommodation,
+    );
+    itinerary?.createdAt;
+    return {
+      itineraryId: itinerary?.id || '',
+      createdAt: itinerary?.createdAt.toDate() || '',
+      schedule,
+      accommodations,
+    };
+  }
+  async getItineraryByUserId(userId: string) {
+    const itineraries = await itinerariesCollection.getBy({ userId });
+    const result = await Promise.all(
+      itineraries.map(({ id }) => this.getItinerary(id)),
+    );
     return result;
+  }
+
+  async storeItineraryWithUserId(userId: string, itineraryId: string) {
+    const itinerary = await itinerariesCollection.edit(itineraryId, { userId });
+    return {
+      id: itinerary?.id || '',
+      userId: itinerary?.userId || '',
+      createdAt: itinerary?.createdAt.toDate() || '',
+    };
   }
 }
 
@@ -217,18 +297,9 @@ type References = {
   activities: string[];
 };
 
+type Location = Omit<LocationModel, 'itineraryId' | 'day'>;
+type Accommodation = Omit<AccommodationModel, 'itineraryId'>;
 type Schedule = {
-  locationName: string;
-  coords: [number, number];
   day: number;
-  time: string;
-  note: string;
-  link: string;
-};
-
-type Accommodation = {
-  accommodationName: string;
-  coords: [number, number];
-  description: string;
-  link: string;
-};
+  locations: Location[];
+}[];

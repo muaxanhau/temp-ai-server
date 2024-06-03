@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Headers, Req, Query } from '@nestjs/common';
 import { NoAuthGuard, NoRoleGuard } from 'src/decorators';
 import { HeadersBaseModel } from 'src/models';
-import { gemini, PushNotificationService, UsersService } from 'src/services';
-import { exceptionUtil, utils } from 'src/utils';
+import { gemini } from 'src/services';
+import { utils } from 'src/utils';
 import { SearchPlaceQueryModel } from './models';
 
 @Controller('/search')
@@ -23,6 +23,7 @@ export class SearchController {
     const text = result.response.text();
     const places = utils.stringToObjectJson<string[]>(text, []);
     const uniquePlaces = utils.mergeUniqueArrays(places);
+
     return uniquePlaces;
   }
 }

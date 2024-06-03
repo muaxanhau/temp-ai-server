@@ -1,8 +1,11 @@
 import {
+  AccommodationModel,
   ChatModel,
   deletedLine,
   FirestoreDeletedBaseModel,
   FirestoreFullBaseModel,
+  ItineraryModel,
+  LocationModel,
   ReferencesModel,
   ReferenceSuggestionModel,
   UserModel,
@@ -246,4 +249,12 @@ export const referencesSuggestionsCollection =
   new Collection<ReferenceSuggestionModel>('references_suggestions');
 export const usersSuggestionsCollection = new Collection<UserSuggestionModel>(
   'users_suggestions',
+);
+
+export const itinerariesCollection = new Collection<ItineraryModel>(
+  'itineraries',
+);
+export const locationsCollection = new Collection<LocationModel>('locations');
+export const accommodationsCollection = new Collection<AccommodationModel>(
+  'accommodations',
 );

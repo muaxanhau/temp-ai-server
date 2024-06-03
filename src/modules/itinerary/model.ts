@@ -39,3 +39,19 @@ export class GetItineraryFromReferenceBodyModel {
   @ArrayMinSize(1)
   activities: string[];
 }
+
+//=====================================================================================================================
+// getItinerary
+export class GetItineraryParamModel {
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+}
+
+//=====================================================================================================================
+// getItinerary
+export class StoreItineraryBodyModel {
+  @IsNotEmpty()
+  @IsString()
+  itineraryId: string;
+}

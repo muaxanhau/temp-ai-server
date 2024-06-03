@@ -2,7 +2,8 @@ import { EnvironmentsConfigModel } from './models';
 
 export const tokenName = 'firebase-token';
 const environments: EnvironmentsConfigModel = {
-  PRE_DEVELOPMENT: {
+  LOCAL_DEVELOPMENT: {
+    // run for localhost
     appName: 'travel-gen-ai',
     enableLog: true,
     tokenName,
@@ -23,6 +24,7 @@ const environments: EnvironmentsConfigModel = {
     },
   },
   DEVELOPMENT: {
+    // run for dev mode but public
     appName: 'travel-gen-ai',
     enableLog: true,
     tokenName,
@@ -44,7 +46,7 @@ const environments: EnvironmentsConfigModel = {
   },
   STAGING: {
     appName: 'travel-gen-ai',
-    enableLog: true,
+    enableLog: false,
     tokenName,
     limitPage: 2,
     prefix: '/v1/api',
@@ -57,7 +59,7 @@ const environments: EnvironmentsConfigModel = {
     },
 
     ai: {
-      geminiKey: 'AIzaSyBV8SsiLbX2OZQ8UxOJozlRhLPBFECKY_s',
+      geminiKey: '',
     },
   },
   PRODUCTION: {
